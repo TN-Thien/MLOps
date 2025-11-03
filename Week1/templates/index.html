@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Dự đoán bệnh tiểu đường</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background-color: #f4f6f8;
+    }
+    h2 {
+      color: #333;
+    }
+    input, select, button {
+      margin: 5px;
+      padding: 5px;
+    }
+    .slider-label {
+      display: inline-block;
+      width: 270px;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    #result {
+      margin-top: 1.5em;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Dự đoán khả năng mắc bệnh tiểu đường</h2>
+  <form id="predictForm">
+    <div>
+      <label class="slider-label">Số lần mang thai (Pregnancies):</label>
+      <input type="range" min="0" max="15" step="1" id="Pregnancies" value="2" oninput="showVal('Pregnancies')">
+      <span id="Pregnancies_val">2</span>
+    </div>
+
+    <div>
+      <label class="slider-label">Mức đường huyết (Glucose):</label>
+      <input type="range" min="50" max="200" step="1" id="Glucose" value="120" oninput="showVal('Glucose')">
+      <span id="Glucose_val">120</span>
+    </div>
+
+    <div>
+      <label class="slider-label">Huyết áp (Blood Pressure):</label>
+      <input type="range" min="40" max="120" step="1" id="BloodPressure" value="70" oninput="showVal('BloodPressure')">
+      <span id="BloodPressure_val">70</span>
+    </div>
+
+    <div>
+      <label class="slider-label">Chỉ số BMI (Body Mass Index):</label>
+      <input type="range" min="10" max="60" step="0.1" id="BMI" value="30.1" oninput="showVal('BMI')">
+      <span id="BMI_val">30.1</span>
+    </div>
+
+    <div>
+      <label class="slider-label">Hệ số di truyền tiểu đường (Diabetes Pedigree Function):</label>
+      <input type="range" min="0.0" max="2.5" step="0.01" id="DiabetesPedigreeFunction" value="0.5" oninput="showVal('DiabetesPedigreeFunction')">
+      <span id="DiabetesPedigreeFunction_val">0.5</span>
+    </div>
+
+    <div>
+      <label class="slider-label">Tuổi (Age):</label>
+      <input type="range" min="10" max="90" step="1" id="Age" value="32" oninput="showVal('Age')">
+      <span id="Age_val">32</span>
+    </div>
+
+    <div>
+      <label class="slider-label">Chủng tộc (Race):</label>
+      <select id="Race">
+        <option value="White">Da trắng (White)</option>
+        <option value="Black">Da đen (Black)</option>
+        <option value="Hispanic">La tinh (Hispanic)</option>
+        <option value="Other">Khác (Other)</option>
+      </select>
+    </div>
+
+    <button type="button" onclick="predict()">Dự đoán</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    function showVal(id) {
+      document.getElementById(id + "_val").innerText = document.getElementById(id).value;
+    }
+
+    async function predict() {
+      const data = {
+        Pregnancies: parseFloat(Pregnancies.value),
+        Glucose: parseFloat(Glucose.value),
+        BloodPressure: parseFloat(BloodPressure.value),
+        BMI: parseFloat(BMI.value),
+        DiabetesPedigreeFunction: parseFloat(DiabetesPedigreeFunction.value),
+        Age: parseFloat(Age.value),
+        Race: Race.value
+      };
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error("Không thể kết nối đến máy chủ");
+
+        const result = await res.json();
+        const percent = (result.probability_of_1 * 100).toFixed(1);
+        const color = percent > 70 ? "red" : percent > 40 ? "orange" : "green";
+
+        document.getElementById("result").innerHTML = `
+          <h3>Kết quả dự đoán</h3>
+          <p><b>Nguy cơ mắc bệnh tiểu đường:</b> ${result.prediction === 1 ? "Cao" : "Thấp"}</p>
+          <p><b>Xác suất mắc bệnh:</b> <span style="color:${color}; font-weight:bold;">${percent}%</span></p>
+        `;
+      } catch (error) {
+        document.getElementById("result").innerHTML = `
+          <p style="color:red;">Lỗi: ${error.message}</p>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
