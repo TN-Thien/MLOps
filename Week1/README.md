@@ -68,8 +68,8 @@ Từ ma trận nhầm lẫn có thể suy ra các chỉ số của lớp dương
 * **FN = 13:** Dự đoán nhầm là không mắc trong khi thực tế mắc (bỏ sót).
 * **TP = 37:** Dự đoán đúng mắc.
 
-**Hình 1 — Confusion Matrix:**
-`![Confusion Matrix - Logistic Regression](./confusion_matrix.png)`
+**Hình 1 — Confusion Matrix:**  
+![Confusion Matrix - Logistic Regression](./confusion_matrix.png)
 
 ## 5. Triển khai FastAPI
 
