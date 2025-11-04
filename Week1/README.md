@@ -87,6 +87,14 @@ Từ ma trận nhầm lẫn có thể suy ra các chỉ số của lớp dương
 3. Truy cập `http://127.0.0.1:8000/` để xem mô tả, `http://127.0.0.1:8000/docs` để thử nhanh, và `/ui` để dùng giao diện nhập.
 4. Gửi yêu cầu `POST /predict` với các trường: `Pregnancies, Glucose, BloodPressure, BMI, DiabetesPedigreeFunction, Age, Race`. Dịch vụ trả kết quả dự đoán và xác suất ước lượng.
 
+### 5.3. Demo giao diện web
+
+- Truy cập trực tiếp: http://127.0.0.1:8000/ui  
+- Mô tả: Giao diện có các thanh trượt (slider) cho Pregnancies, Glucose, BloodPressure, BMI, DiabetesPedigreeFunction, Age và chọn Race; sau khi bấm “Dự đoán” sẽ hiển thị nhãn dự đoán và xác suất.
+
+**Ảnh minh hoạ UI:**  
+![Demo giao diện web](./ui_demo.png)
+
 ## 6. Kết luận
 
 * Bài thực hành đã hoàn thành các yêu cầu: xây dựng mô hình, đánh giá, tối ưu đơn giản, xây dựng demo CLI và triển khai FastAPI (API + UI).
