@@ -1,0 +1,5 @@
+[original][Run 1] Epoch 01/40 - Train loss: 1.5260, acc: 0.3960 | Val loss: 1.7619, acc: 0.3392 | best_acc: 0.3392 (epoch 1)
+[original][Run 1] Epoch 02/40 - Train loss: 1.0438, acc: 0.5610 | Val loss: 1.2356, acc: 0.5042 | best_acc: 0.5042 (epoch 2)
+[original][Run 1] Epoch 03/40 - Train loss: 0.9178, acc: 0.6310 | Val loss: 1.0506, acc: 0.5916 | best_acc: 0.5916 (epoch 3)
+[original][Run 1] Epoch 04/40 - Train loss: 0.8153, acc: 0.6710 | Val loss: 1.1319, acc: 0.5972 | best_acc: 0.5972 (epoch 4)
+[original][Run 1] Epoch 05/40 - Train loss: 0.7508, acc: 0.7040 | Val loss: 0.9342, acc: 0.6488 | best_acc: 0.6488 (epoch 5)

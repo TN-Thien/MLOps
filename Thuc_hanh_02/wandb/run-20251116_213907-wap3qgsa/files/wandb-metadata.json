@@ -1,0 +1,40 @@
+{
+  "os": "Windows-10-10.0.26220-SP0",
+  "python": "CPython 3.11.14",
+  "startedAt": "2025-11-16T14:39:07.391828Z",
+  "program": "d:\\1_Documents\\Nam_3_HK1\\Machine_Learning_Operations\\Thuc_hanh_02\\Bai_02\\a.py",
+  "codePath": "Thuc_hanh_02\\Bai_02\\a.py",
+  "codePathLocal": "Thuc_hanh_02\\Bai_02\\a.py",
+  "git": {
+    "remote": "https://github.com/TN-Thien/MLOps",
+    "commit": "2c3608cdb628b0fc4d6052a05001a77a27cbe27d"
+  },
+  "email": "congthienvt123@gmail.com",
+  "root": "D:\\1_Documents\\Nam_3_HK1\\Machine_Learning_Operations",
+  "host": "DESKTOP-Aspire",
+  "executable": "C:\\Users\\Acer\\anaconda3\\envs\\AI\\python.exe",
+  "cpu_count": 6,
+  "cpu_count_logical": 12,
+  "gpu": "NVIDIA GeForce GTX 1650",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "128873132032",
+      "used": "64784285696"
+    }
+  },
+  "memory": {
+    "total": "25059454976"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce GTX 1650",
+      "memoryTotal": "4294967296",
+      "cudaCores": 896,
+      "architecture": "Turing",
+      "uuid": "GPU-32fc79f8-b3e2-7e4f-def6-94f6e6f2158f"
+    }
+  ],
+  "cudaVersion": "12.8",
+  "writerId": "dl9wmhnptwil2rm0778zlrf3ewb4wzbv"
+}

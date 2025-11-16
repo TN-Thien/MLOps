@@ -1,0 +1,21 @@
+2025-11-16 20:56:12,284 INFO    MainThread:25764 [wandb_setup.py:_flush():81] Current SDK version is 0.22.3
+2025-11-16 20:56:12,284 INFO    MainThread:25764 [wandb_setup.py:_flush():81] Configure stats pid to 25764
+2025-11-16 20:56:12,284 INFO    MainThread:25764 [wandb_setup.py:_flush():81] Loading settings from C:\Users\Acer\.config\wandb\settings
+2025-11-16 20:56:12,284 INFO    MainThread:25764 [wandb_setup.py:_flush():81] Loading settings from D:\1_Documents\Nam_3_HK1\Machine_Learning_Operations\wandb\settings
+2025-11-16 20:56:12,284 INFO    MainThread:25764 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2025-11-16 20:56:12,285 INFO    MainThread:25764 [wandb_init.py:setup_run_log_directory():706] Logging user logs to D:\1_Documents\Nam_3_HK1\Machine_Learning_Operations\wandb\run-20251116_205612-jxgga1mj\logs\debug.log
+2025-11-16 20:56:12,296 INFO    MainThread:25764 [wandb_init.py:setup_run_log_directory():707] Logging internal logs to D:\1_Documents\Nam_3_HK1\Machine_Learning_Operations\wandb\run-20251116_205612-jxgga1mj\logs\debug-internal.log
+2025-11-16 20:56:12,297 INFO    MainThread:25764 [wandb_init.py:init():833] calling init triggers
+2025-11-16 20:56:12,297 INFO    MainThread:25764 [wandb_init.py:init():838] wandb.init called with sweep_config: {}
+config: {'config_name': 'original', 'use_augmentation': False, 'batch_size': 64, 'num_epochs': 20, 'learning_rate': 0.001, 'weight_decay': 5e-05, 'seed': 42, 'num_classes': 5, 'train_per_class': 200, 'num_train_samples': 1000, '_wandb': {}}
+2025-11-16 20:56:12,297 INFO    MainThread:25764 [wandb_init.py:init():881] starting backend
+2025-11-16 20:56:14,583 INFO    MainThread:25764 [wandb_init.py:init():884] sending inform_init request
+2025-11-16 20:56:14,617 INFO    MainThread:25764 [wandb_init.py:init():892] backend started and connected
+2025-11-16 20:56:14,620 INFO    MainThread:25764 [wandb_init.py:init():962] updated telemetry
+2025-11-16 20:56:14,715 INFO    MainThread:25764 [wandb_init.py:init():986] communicating run to backend with 90.0 second timeout
+2025-11-16 20:56:15,570 INFO    MainThread:25764 [wandb_init.py:init():1033] starting run threads in backend
+2025-11-16 20:56:16,609 INFO    MainThread:25764 [wandb_run.py:_console_start():2506] atexit reg
+2025-11-16 20:56:16,610 INFO    MainThread:25764 [wandb_run.py:_redirect():2354] redirect: wrap_raw
+2025-11-16 20:56:16,610 INFO    MainThread:25764 [wandb_run.py:_redirect():2423] Wrapping output streams.
+2025-11-16 20:56:16,610 INFO    MainThread:25764 [wandb_run.py:_redirect():2446] Redirects installed.
+2025-11-16 20:56:16,622 INFO    MainThread:25764 [wandb_init.py:init():1073] run started, returning control to user process

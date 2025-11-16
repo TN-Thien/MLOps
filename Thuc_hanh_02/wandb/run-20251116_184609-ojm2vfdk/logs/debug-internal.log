@@ -1,0 +1,12 @@
+{"time":"2025-11-16T18:46:09.1568392+07:00","level":"INFO","msg":"stream: starting","core version":"0.22.3"}
+{"time":"2025-11-16T18:46:09.587505+07:00","level":"INFO","msg":"stream: created new stream","id":"ojm2vfdk"}
+{"time":"2025-11-16T18:46:09.5880205+07:00","level":"INFO","msg":"handler: started","stream_id":"ojm2vfdk"}
+{"time":"2025-11-16T18:46:09.5902952+07:00","level":"INFO","msg":"stream: started","id":"ojm2vfdk"}
+{"time":"2025-11-16T18:46:09.5909038+07:00","level":"INFO","msg":"writer: started","stream_id":"ojm2vfdk"}
+{"time":"2025-11-16T18:46:09.5909038+07:00","level":"INFO","msg":"sender: started","stream_id":"ojm2vfdk"}
+{"time":"2025-11-16T19:07:10.4345131+07:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-11-16T19:07:10.7972819+07:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-11-16T19:07:10.8110361+07:00","level":"INFO","msg":"stream: closing","id":"ojm2vfdk"}
+{"time":"2025-11-16T19:07:10.8110361+07:00","level":"INFO","msg":"handler: closed","stream_id":"ojm2vfdk"}
+{"time":"2025-11-16T19:07:10.8118093+07:00","level":"INFO","msg":"sender: closed","stream_id":"ojm2vfdk"}
+{"time":"2025-11-16T19:07:10.8118093+07:00","level":"INFO","msg":"stream: closed","id":"ojm2vfdk"}

@@ -1,0 +1,6 @@
+{"time":"2025-11-16T20:43:04.1736416+07:00","level":"INFO","msg":"stream: starting","core version":"0.22.3"}
+{"time":"2025-11-16T20:43:05.066527+07:00","level":"INFO","msg":"stream: created new stream","id":"dhbjp452"}
+{"time":"2025-11-16T20:43:05.066527+07:00","level":"INFO","msg":"handler: started","stream_id":"dhbjp452"}
+{"time":"2025-11-16T20:43:05.0694338+07:00","level":"INFO","msg":"stream: started","id":"dhbjp452"}
+{"time":"2025-11-16T20:43:05.0694338+07:00","level":"INFO","msg":"writer: started","stream_id":"dhbjp452"}
+{"time":"2025-11-16T20:43:05.0694338+07:00","level":"INFO","msg":"sender: started","stream_id":"dhbjp452"}

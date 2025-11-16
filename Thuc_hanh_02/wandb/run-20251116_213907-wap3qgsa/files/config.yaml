@@ -1,0 +1,78 @@
+_wandb:
+    value:
+        cli_version: 0.22.3
+        e:
+            dl9wmhnptwil2rm0778zlrf3ewb4wzbv:
+                codePath: Thuc_hanh_02\Bai_02\a.py
+                codePathLocal: Thuc_hanh_02\Bai_02\a.py
+                cpu_count: 6
+                cpu_count_logical: 12
+                cudaVersion: "12.8"
+                disk:
+                    /:
+                        total: "128873132032"
+                        used: "64784285696"
+                email: congthienvt123@gmail.com
+                executable: C:\Users\Acer\anaconda3\envs\AI\python.exe
+                git:
+                    commit: 2c3608cdb628b0fc4d6052a05001a77a27cbe27d
+                    remote: https://github.com/TN-Thien/MLOps
+                gpu: NVIDIA GeForce GTX 1650
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Turing
+                      cudaCores: 896
+                      memoryTotal: "4294967296"
+                      name: NVIDIA GeForce GTX 1650
+                      uuid: GPU-32fc79f8-b3e2-7e4f-def6-94f6e6f2158f
+                host: DESKTOP-Aspire
+                memory:
+                    total: "25059454976"
+                os: Windows-10-10.0.26220-SP0
+                program: d:\1_Documents\Nam_3_HK1\Machine_Learning_Operations\Thuc_hanh_02\Bai_02\a.py
+                python: CPython 3.11.14
+                root: D:\1_Documents\Nam_3_HK1\Machine_Learning_Operations
+                startedAt: "2025-11-16T14:39:07.391828Z"
+                writerId: dl9wmhnptwil2rm0778zlrf3ewb4wzbv
+        m: []
+        python_version: 3.11.14
+        t:
+            "1":
+                - 1
+                - 41
+            "2":
+                - 1
+                - 41
+            "3":
+                - 2
+                - 13
+                - 16
+                - 62
+            "4": 3.11.14
+            "5": 0.22.3
+            "8":
+                - 3
+            "10":
+                - 20
+            "12": 0.22.3
+            "13": windows-amd64
+batch_size:
+    value: 64
+config_name:
+    value: original
+learning_rate:
+    value: 0.001
+num_classes:
+    value: 5
+num_epochs:
+    value: 20
+num_train_samples:
+    value: 1000
+seed:
+    value: 43
+train_per_class:
+    value: 200
+use_augmentation:
+    value: false
+weight_decay:
+    value: 5e-05
