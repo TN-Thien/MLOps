@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# MLflow artifacts
+mlruns/
+mlflow_local/
+
+# Data (không commit ảnh)
+data/512x384/
+data/*.zip
+data/*.tar
+data/*.tgz
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
