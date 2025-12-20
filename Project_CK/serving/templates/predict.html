@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dự đoán – IQA</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Dự đoán điểm chất lượng ảnh</h1>
+    <p class="muted">Upload 1 ảnh, hệ thống trả về điểm (0–100).</p>
+
+    <div class="card">
+      <form id="form" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required />
+        <button class="btn" type="submit">Dự đoán</button>
+        <a class="btn secondary" href="/">Trang chủ</a>
+      </form>
+
+      <pre id="ketqua" class="result"></pre>
+    </div>
+  </div>
+
+<script>
+  const form = document.getElementById("form");
+  const out = document.getElementById("ketqua");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    out.textContent = "Đang xử lý...";
+
+    const fd = new FormData(form);
+    const res = await fetch("/du-doan", { method: "POST", body: fd });
+    const txt = await res.text();
+
+    try {
+      out.textContent = JSON.stringify(JSON.parse(txt), null, 2);
+    } catch {
+      out.textContent = txt;
+    }
+  });
+</script>
+</body>
+</html>
