@@ -10,16 +10,14 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-
 @dataclass(frozen=True)
 class CauHinhDuLieu:
     thu_muc_anh: Path = Path("data/512x384")
     file_csv: Path = Path("data/koniq10k_distributions_sets.csv")
-    khoa_split: str = "set"  # tên cột split (thường là 'set')
+    khoa_split: str = "set"
     ten_split_train: str = "training"
     ten_split_val: str = "validation"
     ten_split_test: str = "test"
-
 
 def _tim_cot(df: pd.DataFrame, ung_vien: list[str]) -> str:
     cols_lower = {c.lower(): c for c in df.columns}
@@ -30,7 +28,6 @@ def _tim_cot(df: pd.DataFrame, ung_vien: list[str]) -> str:
         "Không tìm thấy cột phù hợp. Các cột hiện có: "
         + ", ".join(df.columns.astype(str).tolist())
     )
-
 
 class TapDuLieuIQA(Dataset):
     """
@@ -69,8 +66,6 @@ class TapDuLieuIQA(Dataset):
         self.ds_anh = df[cot_anh].astype(str).tolist()
         self.ds_mos = df[cot_mos].astype(float).tolist()
 
-        # Chuẩn hoá MOS: nếu giá trị dạng 0–100 thì đưa về 0–1 để train ổn định
-        # (sau đó serving sẽ nhân lại 100)
         self.ds_mos = [m / 100.0 if m > 1.5 else m for m in self.ds_mos]
 
         self.transform = transform or transforms.Compose(

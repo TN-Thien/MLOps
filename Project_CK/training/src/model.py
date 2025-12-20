@@ -4,13 +4,11 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-
 class MoHinhIQA(nn.Module):
     """
     Mô hình IQA: backbone CNN + head hồi quy 1 giá trị (0–1).
     Dùng sigmoid để đảm bảo output nằm trong [0, 1].
     """
-
     def __init__(self, backbone: str = "efficientnet_b0", dong_bang_backbone: bool = False) -> None:
         super().__init__()
         backbone = backbone.lower()
@@ -38,7 +36,6 @@ class MoHinhIQA(nn.Module):
 
         if dong_bang_backbone:
             for name, p in self.backbone.named_parameters():
-                # vẫn cho phép train layer cuối
                 if "classifier" in name or name.endswith(".fc.weight") or name.endswith(".fc.bias"):
                     continue
                 p.requires_grad = False
