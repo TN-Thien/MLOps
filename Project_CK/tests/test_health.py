@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 from serving.api import app
 
-def test_suc_khoe_ok():
+def test_health_ok():
     client = TestClient(app)
-    r = client.get("/suc-khoe")
+    r = client.get("/health")
     assert r.status_code == 200
-    assert r.json()["trang_thai"] == "ok"
+    assert r.json().get("status") == "ok"

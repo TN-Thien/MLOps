@@ -43,6 +43,6 @@ class MoHinhIQA(nn.Module):
         self.kich_hoat = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        y = self.backbone(x)  # [B,1]
+        y = self.backbone(x)
         y = self.kich_hoat(y)
         return y

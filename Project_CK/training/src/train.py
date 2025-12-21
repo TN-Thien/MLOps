@@ -101,7 +101,7 @@ def parse_args() -> argparse.Namespace:
                    choices=["efficientnet_b0", "resnet18", "mobilenet_v2"])
     p.add_argument("--epochs", type=int, default=5)
     p.add_argument("--batch-size", type=int, default=16)
-    p.add_argument("--lr", type=float, default=1e-4)
+    p.add_argument("--lr", type=float, default=1e-3)
 
     default_workers = 0 if platform.system().lower().startswith("win") else 2
     p.add_argument("--num-workers", type=int, default=default_workers)

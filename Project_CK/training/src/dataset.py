@@ -12,8 +12,8 @@ from torchvision import transforms
 
 @dataclass(frozen=True)
 class CauHinhDuLieu:
-    thu_muc_anh: Path = Path("data/512x384")
-    file_csv: Path = Path("data/koniq10k_distributions_sets.csv")
+    thu_muc_anh: Path = Path("./data/512x384")
+    file_csv: Path = Path("./data/koniq10k_distributions_sets.csv")
     khoa_split: str = "set"
     ten_split_train: str = "training"
     ten_split_val: str = "validation"
@@ -91,5 +91,5 @@ class TapDuLieuIQA(Dataset):
         img = Image.open(duong_dan).convert("RGB")
         x = self.transform(img)
 
-        y = torch.tensor(self.ds_mos[idx], dtype=torch.float32)  # 0–1
+        y = torch.tensor(self.ds_mos[idx], dtype=torch.float32)
         return x, y

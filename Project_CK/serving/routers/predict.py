@@ -8,39 +8,31 @@ from torchvision import transforms
 from serving.config import templates
 from serving.utils.load_model import load_model, device
 
-router_du_doan_api = APIRouter(tags=["Dự đoán"])
-router_du_doan_ui = APIRouter(tags=["Giao diện"])
+router_predict_api = APIRouter(tags=["predict"])
+router_predict_ui = APIRouter()
 
-_transform = transforms.Compose(
-    [
-        transforms.Resize((512, 384)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ]
-)
+_transform = transforms.Compose([
+    transforms.Resize((384, 384)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
 
-@router_du_doan_ui.get("/du-doan", response_class=HTMLResponse)
-@router_du_doan_ui.get("/predict-ui", response_class=HTMLResponse)
-def giao_dien_du_doan(request: Request):
-    return templates.TemplateResponse("predict.html", {"request": request})
+@router_predict_ui.get("/predict-ui", response_class=HTMLResponse, include_in_schema=False)
+def predict_ui(request: Request):
+    return templates.TemplateResponse(request, "index.html")
 
-@router_du_doan_api.post("/du-doan")
-@router_du_doan_api.post("/predict")
-async def du_doan(file: UploadFile = File(...)):
+@router_predict_api.post("/predict", summary="Predict image quality")
+async def predict(file: UploadFile = File(...)):
     if not file.content_type or "image" not in file.content_type:
-        raise HTTPException(status_code=400, detail="File không phải hình ảnh.")
+        raise HTTPException(status_code=400, detail="Invalid image file")
 
     img_bytes = await file.read()
-    try:
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Không đọc được ảnh. Hãy thử file khác.")
+    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
 
     x = _transform(img).unsqueeze(0).to(device)
-
     model = load_model()
+
     with torch.no_grad():
         pred = model(x).squeeze().item()
 
-    diem = float(pred * 100.0)
-    return {"diem_chat_luong": round(diem, 2)}
+    return {"quality": round(pred * 100.0, 2)}

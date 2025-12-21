@@ -1,8 +1,7 @@
 from fastapi import APIRouter
 
-router_suc_khoe = APIRouter(tags=["Sức khoẻ"])
+router_health = APIRouter(tags=["health"])
 
-@router_suc_khoe.get("/suc-khoe")
-@router_suc_khoe.get("/health")
-def suc_khoe():
-    return {"trang_thai": "ok"}
+@router_health.get("/health", summary="Health check")
+def health():
+    return {"status": "ok"}
