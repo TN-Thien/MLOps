@@ -11,15 +11,22 @@ from serving.utils.load_model import load_model, device
 router_predict_api = APIRouter(tags=["predict"])
 router_predict_ui = APIRouter()
 
-_transform = transforms.Compose([
-    transforms.Resize((384, 384)),
+transform = transforms.Compose([
+    transforms.Resize((512, 384)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225],
+    ),
 ])
 
 @router_predict_ui.get("/predict-ui", response_class=HTMLResponse, include_in_schema=False)
 def predict_ui(request: Request):
     return templates.TemplateResponse(request, "index.html")
+
+@router_predict_ui.get("/predict", response_class=HTMLResponse, include_in_schema=False)
+def predict_alias(request: Request):
+    return templates.TemplateResponse(request, "predict.html")
 
 @router_predict_api.post("/predict", summary="Predict image quality")
 async def predict(file: UploadFile = File(...)):
@@ -29,7 +36,7 @@ async def predict(file: UploadFile = File(...)):
     img_bytes = await file.read()
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
 
-    x = _transform(img).unsqueeze(0).to(device)
+    x = transform(img).unsqueeze(0).to(device)
     model = load_model()
 
     with torch.no_grad():

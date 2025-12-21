@@ -2,25 +2,52 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Dự đoán IQA</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .result-card { margin-top: 12px; padding: 14px; border-radius: 14px; border: 1px solid #1e2a44; background: #0b0f19; }
+    .score-row { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .score { font-size: 40px; font-weight: 800; }
+    .label { padding: 6px 10px; border-radius: 999px; background: #2a3246; font-weight: 600; }
+    .desc { color: #b6b6b6; margin-top: 6px; }
+    .bar-wrap { margin-top: 10px; background:#121a2b; border:1px solid #1e2a44; border-radius: 999px; height: 12px; overflow:hidden; }
+    .bar { height: 100%; width: 0%; background: #2b6df3; transition: width .4s ease; }
+    .err { color: #ffb4b4; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
 <div class="container">
   <h1>Dự đoán điểm chất lượng ảnh</h1>
-  <p class="muted">Chọn 1 ảnh để chấm điểm.</p>
+  <p class="muted">Chọn một ảnh để chấm điểm.</p>
 
   <div class="card">
     <input id="file" type="file" accept="image/*"/>
+
     <div style="margin-top:12px;">
-      <img id="preview" style="max-width:100%; display:none; border-radius:12px;"/>
+      <img id="preview" style="max-width:100%; display:none; border-radius:12px; border:1px solid #1e2a44;"/>
     </div>
 
     <div style="margin-top:12px;">
       <button class="btn" id="btn">Chấm điểm</button>
+      <a class="btn secondary" href="/">Trang chủ</a>
     </div>
 
-    <pre id="out" class="result" style="margin-top:12px;"></pre>
+    <div id="result" class="result-card" style="display:none;">
+      <div class="score-row">
+        <div class="score" id="score">--</div>
+        <div class="label" id="label">--</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar" id="bar"></div>
+      </div>
+      <div class="desc" id="desc">--</div>
+    </div>
+
+    <div id="error" class="result-card" style="display:none;">
+      <div class="err" id="errText"></div>
+    </div>
+
   </div>
 </div>
 
@@ -28,10 +55,34 @@
 const file = document.getElementById("file");
 const preview = document.getElementById("preview");
 const btn = document.getElementById("btn");
-const out = document.getElementById("out");
+
+const result = document.getElementById("result");
+const scoreEl = document.getElementById("score");
+const labelEl = document.getElementById("label");
+const descEl  = document.getElementById("desc");
+const barEl   = document.getElementById("bar");
+
+const errorBox = document.getElementById("error");
+const errText  = document.getElementById("errText");
+
+function resetUI() {
+  result.style.display = "none";
+  errorBox.style.display = "none";
+  scoreEl.textContent = "--";
+  labelEl.textContent = "--";
+  descEl.textContent = "--";
+  barEl.style.width = "0%";
+}
+
+function classify(score) {
+  if (score < 40) return {label:"Kém", desc:"Ảnh có nhiều nhiễu/blur/artefact hoặc phơi sáng không tốt."};
+  if (score < 60) return {label:"Trung bình", desc:"Chất lượng chấp nhận được nhưng chưa thật sự rõ/đẹp."};
+  if (score < 80) return {label:"Tốt", desc:"Ảnh khá rõ ràng, ít lỗi, phù hợp cho hầu hết mục đích."};
+  return {label:"Rất tốt", desc:"Ảnh rất rõ, chất lượng cao."};
+}
 
 file.addEventListener("change", () => {
-  out.textContent = "";
+  resetUI();
   const f = file.files?.[0];
   if (!f) return;
   const reader = new FileReader();
@@ -43,16 +94,51 @@ file.addEventListener("change", () => {
 });
 
 btn.addEventListener("click", async () => {
+  resetUI();
   const f = file.files?.[0];
-  if (!f) { out.textContent = "Bạn chưa chọn ảnh."; return; }
+  if (!f) {
+    errorBox.style.display = "block";
+    errText.textContent = "Bạn chưa chọn ảnh.";
+    return;
+  }
 
-  out.textContent = "Đang chấm điểm...";
-  const fd = new FormData();
-  fd.append("file", f);
+  btn.disabled = true;
+  btn.textContent = "Đang chấm điểm...";
 
-  const res = await fetch("/predict", { method:"POST", body: fd });
-  const data = await res.json();
-  out.textContent = JSON.stringify(data, null, 2);
+  try {
+    const fd = new FormData();
+    fd.append("file", f);
+
+    const res = await fetch("/predict", { method:"POST", body: fd });
+
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Lỗi ${res.status}: ${t}`);
+    }
+
+    const data = await res.json();
+
+    const score = Number(data.quality);
+    if (!Number.isFinite(score)) {
+      throw new Error("Phản hồi không hợp lệ (không có 'quality').");
+    }
+
+    const cl = classify(score);
+    scoreEl.textContent = score.toFixed(2);
+    labelEl.textContent = cl.label;
+    descEl.textContent  = cl.desc;
+
+    const pct = Math.max(0, Math.min(100, score));
+    barEl.style.width = pct.toFixed(0) + "%";
+
+    result.style.display = "block";
+  } catch (e) {
+    errorBox.style.display = "block";
+    errText.textContent = String(e.message || e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Chấm điểm";
+  }
 });
 </script>
 </body>
