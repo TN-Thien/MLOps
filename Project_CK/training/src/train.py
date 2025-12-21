@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 from dataclasses import asdict
-from typing import Dict, Tuple
+from typing import Dict
 
 import mlflow
+import mlflow.pytorch
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
-from scipy.stats import pearsonr, spearmanr
 from torch.utils.data import DataLoader
 
 from training.src.dataset import CauHinhDuLieu, TapDuLieuIQA
@@ -18,7 +20,23 @@ from training.src.model import MoHinhIQA
 def dat_thiet_lap_seed(seed: int) -> None:
     torch.manual_seed(seed)
     np.random.seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+def pearson_np(a: np.ndarray, b: np.ndarray) -> float:
+    """Tính Pearson correlation bằng NumPy (không cần SciPy)."""
+    a = a.astype(np.float64)
+    b = b.astype(np.float64)
+    a = a - a.mean()
+    b = b - b.mean()
+    denom = np.sqrt((a * a).sum() * (b * b).sum())
+    return float((a * b).sum() / denom) if denom > 0 else float("nan")
+
+def spearman_np(a: np.ndarray, b: np.ndarray) -> float:
+    """Tính Spearman correlation: rank bằng Pandas rồi Pearson bằng NumPy."""
+    ra = pd.Series(a).rank(method="average").to_numpy()
+    rb = pd.Series(b).rank(method="average").to_numpy()
+    return pearson_np(ra, rb)
 
 @torch.no_grad()
 def danh_gia(model: torch.nn.Module, loader: DataLoader, device: str) -> Dict[str, float]:
@@ -29,7 +47,7 @@ def danh_gia(model: torch.nn.Module, loader: DataLoader, device: str) -> Dict[st
         x = x.to(device)
         y = y.to(device)
 
-        p = model(x).squeeze(1)  # [B]
+        p = model(x).squeeze(1)
         y_true.append(y.detach().cpu().numpy())
         y_pred.append(p.detach().cpu().numpy())
 
@@ -39,16 +57,17 @@ def danh_gia(model: torch.nn.Module, loader: DataLoader, device: str) -> Dict[st
     mae = float(np.mean(np.abs(y_true - y_pred)))
     rmse = float(np.sqrt(np.mean((y_true - y_pred) ** 2)))
 
-    try:
-        plcc = float(pearsonr(y_true, y_pred)[0])
-    except Exception:
-        plcc = float("nan")
-    try:
-        srocc = float(spearmanr(y_true, y_pred).correlation)
-    except Exception:
-        srocc = float("nan")
+    plcc = pearson_np(y_true, y_pred)
+    srocc = spearman_np(y_true, y_pred)
 
-    return {"mae": mae, "rmse": rmse, "plcc": plcc, "srocc": srocc}
+    return {
+        "mae": mae,
+        "rmse": rmse,
+        "plcc": plcc,
+        "srocc": srocc,
+        "mae_100": mae * 100.0,
+        "rmse_100": rmse * 100.0,
+    }
 
 def train_one_epoch(
     model: torch.nn.Module,
@@ -76,20 +95,24 @@ def train_one_epoch(
     return float(np.mean(losses))
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Huấn luyện mô hình IQA (local MLOps)")
-    p.add_argument("--backbone", default="efficientnet_b0", choices=["efficientnet_b0", "resnet18", "mobilenet_v2"])
+    p = argparse.ArgumentParser(description="Huấn luyện mô hình IQA (MLOps local)")
+
+    p.add_argument("--backbone", default="efficientnet_b0",
+                   choices=["efficientnet_b0", "resnet18", "mobilenet_v2"])
     p.add_argument("--epochs", type=int, default=5)
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--lr", type=float, default=1e-4)
-    p.add_argument("--num-workers", type=int, default=2)
+
+    default_workers = 0 if platform.system().lower().startswith("win") else 2
+    p.add_argument("--num-workers", type=int, default=default_workers)
+
     p.add_argument("--seed", type=int, default=42)
 
-    p.add_argument("--ten-model", default="iqa_viet_hoa", help="Tên model trong MLflow Registry")
-    p.add_argument("--alias-thu-nghiem", default="thu_nghiem")
-    p.add_argument("--alias-san-xuat", default="san_xuat")
+    p.add_argument("--model-name", default="iqa_efficientnet_b0", help="Tên model trong MLflow Registry")
+    p.add_argument("--alias", default="staging", help="Alias trỏ tới version muốn serving (vd: staging)")
 
     p.add_argument("--mlflow-uri", default=os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000"))
-    p.add_argument("--experiment", default="IQA_VietHoa")
+    p.add_argument("--experiment", default="IQA")
 
     return p.parse_args()
 
@@ -103,17 +126,30 @@ def main() -> None:
     mlflow.set_experiment(args.experiment)
 
     cfg = CauHinhDuLieu()
-    ds_train = TapDuLieuIQA(split=cfg.ten_split_train, cfg=cfg)
-    ds_val = TapDuLieuIQA(split=cfg.ten_split_val, cfg=cfg)
 
-    train_loader = DataLoader(ds_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    val_loader = DataLoader(ds_val, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+    ds_train = TapDuLieuIQA(split=cfg.ten_split_train, cfg=cfg)
+
+    try:
+        ds_val = TapDuLieuIQA(split=cfg.ten_split_val, cfg=cfg)
+        ten_val = cfg.ten_split_val
+    except Exception:
+        ds_val = TapDuLieuIQA(split=cfg.ten_split_test, cfg=cfg)
+        ten_val = cfg.ten_split_test
+
+    train_loader = DataLoader(
+        ds_train, batch_size=args.batch_size, shuffle=True,
+        num_workers=args.num_workers, pin_memory=(device == "cuda")
+    )
+    val_loader = DataLoader(
+        ds_val, batch_size=args.batch_size, shuffle=False,
+        num_workers=args.num_workers, pin_memory=(device == "cuda")
+    )
 
     model = MoHinhIQA(backbone=args.backbone).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
     loss_fn = nn.MSELoss()
 
-    with mlflow.start_run(run_name=f"train_{args.backbone}") as run:
+    with mlflow.start_run(run_name=f"train_{args.backbone}"):
         mlflow.log_params(
             {
                 "backbone": args.backbone,
@@ -122,8 +158,10 @@ def main() -> None:
                 "lr": args.lr,
                 "device": device,
                 "seed": args.seed,
-                "du_lieu": str(cfg.file_csv),
-                "thu_muc_anh": str(cfg.thu_muc_anh),
+                "num_workers": args.num_workers,
+                "val_split": ten_val,
+                "csv": str(cfg.file_csv),
+                "image_dir": str(cfg.thu_muc_anh),
                 **{f"cfg_{k}": v for k, v in asdict(cfg).items()},
             }
         )
@@ -139,23 +177,26 @@ def main() -> None:
             for k, v in metrics_val.items():
                 mlflow.log_metric(f"val_{k}", v, step=epoch)
 
-            print(f"[Epoch {epoch}] loss={loss:.5f} | " +
-                  " | ".join([f"{k}={v:.4f}" for k, v in metrics_val.items()]))
+            print(
+                f"[Epoch {epoch}] loss={loss:.5f} | "
+                + " | ".join([f"{k}={v:.4f}" for k, v in metrics_val.items()])
+            )
 
             if metrics_val["srocc"] == metrics_val["srocc"] and metrics_val["srocc"] > best_srocc:
                 best_srocc = metrics_val["srocc"]
                 best_epoch = epoch
+
                 mlflow.pytorch.log_model(
                     pytorch_model=model,
-                    artifact_path="model",
-                    registered_model_name=args.ten_model,
+                    name="model",
+                    registered_model_name=args.model_name,
                 )
 
         mlflow.log_metric("best_val_srocc", best_srocc)
         mlflow.log_metric("best_epoch", best_epoch)
 
         client = mlflow.tracking.MlflowClient()
-        versions = client.search_model_versions(f"name='{args.ten_model}'")
+        versions = client.search_model_versions(f"name='{args.model_name}'")
         if not versions:
             raise RuntimeError("Không tìm thấy model version nào trong Registry sau khi log_model.")
 
@@ -163,10 +204,8 @@ def main() -> None:
         latest = versions_sorted[-1]
         vnum = int(latest.version)
 
-        client.set_registered_model_alias(args.ten_model, args.alias_thu_nghiem, vnum)
-        # client.set_registered_model_alias(args.ten_model, args.alias_san_xuat, vnum)
-
-        print(f"Đã đăng ký model '{args.ten_model}' version={vnum} và gán alias '{args.alias_thu_nghiem}'")
+        client.set_registered_model_alias(args.model_name, args.alias, vnum)
+        print(f"Registered model '{args.model_name}' version={vnum} | alias '{args.alias}'")
 
 if __name__ == "__main__":
     main()

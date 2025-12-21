@@ -14,7 +14,7 @@ services:
       dockerfile: infra/Dockerfile.fastapi
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - TEN_MODEL_IQA=iqa_viet_hoa
+      - TEN_MODEL_IQA=iqa
       - ALIAS_IQA=thu_nghiem
     ports:
       - "8000:8000"

@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from routers.health import router_suc_khoe
-from routers.root import router_trang_chu
-from routers.predict import router_du_doan_api, router_du_doan_ui
+from serving.routers.health import router_suc_khoe
+from serving.routers.root import router_trang_chu
+from serving.routers.predict import router_du_doan_api, router_du_doan_ui
 
 app = FastAPI(
     title="IQA – Đánh giá chất lượng hình ảnh (MLOps Local)",
