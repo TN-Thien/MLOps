@@ -1,0 +1,33 @@
+# Dataset / logs / artifacts (không đưa vào image)
+data/
+mlruns/
+mlflow_local/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Venv / tooling
+.venv/
+env/
+.vscode/
+.idea/
+
+# Git
+.git/
+.github/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Model files
+*.pt
+*.pth
+*.onnx
+*.pkl
