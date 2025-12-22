@@ -9,10 +9,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cài Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -23,19 +24,23 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
 
-      - name: Cài dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Chạy tests
+      - name: Run tests
         run: |
-          pytest --cov
+          pytest -q
+
   docker_build:
     runs-on: ubuntu-latest
+    needs: test
+
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker images (kiểm tra build được)
+
+      - name: Build Docker images (build check only)
         run: |
           docker build -f infra/Dockerfile.mlflow -t iqa-mlflow-local .
           docker build -f infra/Dockerfile.fastapi -t iqa-api-local .
