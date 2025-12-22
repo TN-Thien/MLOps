@@ -10,6 +10,7 @@ mlflow_local/
 
 # Data (không commit ảnh)
 data/512x384/
+data/koniq10k_distributions_sets.csv
 data/*.zip
 data/*.tar
 data/*.tgz
