@@ -276,7 +276,7 @@ def main() -> None:
         mlflow.pytorch.log_model(
             pytorch_model=model,
             artifact_path="model",
-            registered_model_name=args.model_name,
+            registered_model_name=f"iqa_{args.backbone}",
             input_example=input_example,
             signature=signature,
         )
@@ -306,7 +306,7 @@ def main() -> None:
         }
 
         if _is_better(new_metrics, cur_metrics, primary=args.primary_metric):
-            client.set_registered_model_alias(args.model_name, args.alias, new_version)
+            client.set_registered_model_alias(f"iqa_{args.backbone}", args.alias, new_version)
             print(
                 f"Updated alias '{args.alias}' -> version {new_version} "
                 f"({args.primary_metric} {new_metrics[args.primary_metric]:.4f} "

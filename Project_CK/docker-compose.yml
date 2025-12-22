@@ -7,6 +7,12 @@ services:
       - "5000:5000"
     volumes:
       - ./mlflow_local:/app/mlflow_local
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   api:
     build:
@@ -14,9 +20,11 @@ services:
       dockerfile: infra/Dockerfile.fastapi
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - TEN_MODEL_IQA=iqa
+      - TEN_MODEL_IQA=iqa_mobile_v2
       - ALIAS_IQA=thu_nghiem
     ports:
       - "8000:8000"
     depends_on:
-      - mlflow
+      mlflow:
+        condition: service_healthy
+    restart: unless-stopped
