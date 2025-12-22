@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r Project_CK/requirements.txt
 
       - name: Run tests
         run: |
@@ -42,5 +42,5 @@ jobs:
 
       - name: Build Docker images (build check only)
         run: |
-          docker build -f infra/Dockerfile.mlflow -t iqa-mlflow-local .
-          docker build -f infra/Dockerfile.fastapi -t iqa-api-local .
+          docker build -f Project_CK/infra/Dockerfile.mlflow -t iqa-mlflow-local .
+          docker build -f Project_CK/infra/Dockerfile.fastapi -t iqa-api-local .
