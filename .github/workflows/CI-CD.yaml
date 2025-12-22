@@ -1,10 +1,11 @@
-name: CI
+name: CI/CD
 
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -50,3 +51,20 @@ jobs:
         run: |
           docker build -f Project_CK/infra/Dockerfile.mlflow -t iqa-mlflow-local Project_CK
           docker build -f Project_CK/infra/Dockerfile.fastapi -t iqa-api-local Project_CK
+
+  deploy_local_windows:
+    # CD chỉ chạy khi push main
+    if: github.event_name != 'pull_request'
+    runs-on: [self-hosted, windows-iqa]
+    needs: docker_build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy (Docker Compose)
+        shell: powershell
+        working-directory: Project_CK
+        run: |
+          docker compose down
+          docker compose up -d --build
+          docker compose ps
