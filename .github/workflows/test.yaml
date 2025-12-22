@@ -10,6 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: Project_CK
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,14 +26,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('Project_CK/requirements.txt') }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r Project_CK/requirements.txt
+          pip install -r requirements.txt
 
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/Project_CK
         run: |
           pytest -q
 
@@ -42,5 +48,5 @@ jobs:
 
       - name: Build Docker images (build check only)
         run: |
-          docker build -f Project_CK/infra/Dockerfile.mlflow -t iqa-mlflow-local .
-          docker build -f Project_CK/infra/Dockerfile.fastapi -t iqa-api-local .
+          docker build -f Project_CK/infra/Dockerfile.mlflow -t iqa-mlflow-local Project_CK
+          docker build -f Project_CK/infra/Dockerfile.fastapi -t iqa-api-local Project_CK
