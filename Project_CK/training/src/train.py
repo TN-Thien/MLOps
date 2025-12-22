@@ -283,12 +283,12 @@ def main() -> None:
 
         client = mlflow.tracking.MlflowClient()
         versions = client.search_model_versions(f"name='{args.model_name}'")
-        versions_this_run = [v for v in versions if v.run_id == run.info.run_id]
-        if not versions_this_run:
-            raise RuntimeError("Không tìm thấy model version thuộc run hiện tại sau khi log_model.")
+        if not versions:
+            raise RuntimeError("Không tìm thấy model version nào trong Registry sau khi log_model.")
 
-        new_v = max(versions_this_run, key=lambda x: int(x.version))
-        new_version = int(new_v.version)
+        latest = max(versions, key=lambda v: int(v.version))
+        new_version = int(latest.version)
+
 
         client.set_model_version_tag(args.model_name, new_version, "val_srocc", str(best_val_metrics["srocc"]))
         client.set_model_version_tag(args.model_name, new_version, "val_plcc", str(best_val_metrics["plcc"]))
