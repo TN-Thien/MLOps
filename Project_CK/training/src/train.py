@@ -319,7 +319,7 @@ def main() -> None:
                 f"Current {args.primary_metric}={cur_metrics.get(args.primary_metric, float('nan')):.4f}"
             )
 
-        print(f"🏃 Run: {mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}")
+        print(f"Run: {mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}")
 
 if __name__ == "__main__":
     main()

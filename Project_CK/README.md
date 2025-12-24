@@ -1,165 +1,223 @@
-# Project MLOps: Đánh giá chất lượng hình ảnh (IQA)
+# Project MLOps: Đánh giá chất lượng hình ảnh
 
-Project này xây dựng pipeline MLOps chạy hoàn toàn local cho bài toán Image Quality Assessment (IQA):
-- Training (PyTorch) + đánh giá metrics
-- MLflow Tracking + Model Registry (local)
-- FastAPI Serving (API + UI upload ảnh + hiển thị kết quả trực quan)
-- Docker Compose chạy toàn bộ stack (MLflow + API)
-- CI (GitHub Actions): pytest + kiểm tra build Docker
-- (Tuỳ chọn) CD local (Windows self-hosted runner): push lên GitHub là máy Windows tự redeploy bằng Docker Compose
+Dự án này xây dựng một bài toán đánh giá chất lượng hình ảnh, bao gồm toàn bộ vòng đời của mô hình học máy:
 
-Mục tiêu: demo vòng đời mô hình theo MLOps.
+* Chuẩn bị dữ liệu
+* Huấn luyện mô hình (PyTorch)
+* Đánh giá bằng metric chuẩn IQA (Image Quality Assessment)
+* Quản lý experiment & model bằng MLflow Tracking + Model Registry
+* Triển khai mô hình bằng FastAPI (API + Web UI)
+* Kiểm thử tự động với pytest
+* Đóng gói & vận hành bằng Docker / Docker Compose
 
----
+Mục tiêu của project:
 
-## 1. Yêu cầu trước khi chạy
+> Minh họa một quy trình MLOps thực tế, có thể mở rộng, dễ demo và dễ deploy, thay vì chỉ train model đơn lẻ.
 
-1) Cài Python 3.11
-2) Cài Git
-3) Cài Docker Desktop (Windows) để chạy Compose
-4) Dataset phải có:
-- file CSV: data/koniq10k_distributions_sets.csv
-- thư mục ảnh: data/512x384/ (chứa ảnh)
 
-Nếu thiếu ảnh, train sẽ lỗi vì không đọc được file.
+## 1. Bài toán: Đánh giá chất lượng hình ảnh
 
----
+Đánh giá chất lượng hình ảnh là bài toán ước lượng mức độ “tốt/xấu” của một ảnh dựa trên cảm nhận thị giác của con người.
 
-## 2. Cấu trúc thư mục chính (Project_CK)
+* Input: 1 ảnh RGB
+* Output: 1 điểm số 0 – 100 (điểm càng cao → ảnh càng đẹp)
 
-Project_CK/
-- data/512x384/ : ảnh dataset
-- data/koniq10k_distributions_sets.csv : split/labels
-- training/src/train.py : script train + MLflow log + registry + alias staging
-- serving/api.py : FastAPI app + mount routers + mount static
-- serving/templates/index.html : trang chủ UI
-- serving/templates/predict.html : UI upload ảnh + preview + kết quả trực quan
-- serving/static/style.css : CSS giao diện (có thể dùng background.webp)
-- serving/utils/load_model.py : load model từ MLflow theo alias (staging)
-- tests/ : pytest kiểm thử API
-- docker-compose.yml : chạy MLflow + API local
-- infra/Dockerfile.* : đóng gói docker cho MLflow và API
-- infra/run_mlflow.bat : chạy MLflow local trên Windows (nếu không dùng docker)
+Trong project này:
 
----
+* Mô hình được huấn luyện để dự đoán điểm chuẩn hoá 0 – 1
+* Khi serving, điểm được quy đổi sang thang 0 – 100 để dễ hiểu với người dùng
 
-## 3. Chạy theo cách đơn giản nhất (không Docker)
 
-Bước 1: mở PowerShell tại thư mục Project_CK và tạo môi trường ảo
-- Windows: cd Project_CK
-- Windows: python -m venv .venv
-- Windows: .\.venv\Scripts\activate
+## 2. Dataset
+Project sử dụng dataset KonIQ-10k (Konstanz Natural Image Quality) – một dataset IQA phổ biến, được xây dựng dựa trên đánh giá chủ quan của con người với cấu trúc:
 
-Bước 2: cài thư viện
-- Windows: python -m pip install --upgrade pip
-- Windows: pip install -r requirements.txt
+* Ảnh: `data/512x384/<image_name>`
+* Nhãn & split: `data/koniq10k_distributions_sets.csv`
 
-Bước 3: chạy MLflow local
-- Windows: infra\run_mlflow.bat
-Mở MLflow UI: http://127.0.0.1:5000
+Nguồn dataset (Kaggle): https://www.kaggle.com/datasets/generalhawking/koniq-10k-dataset
 
-Bước 4: train + đăng ký model vào MLflow Registry
+### 2.1 Phân chia dữ liệu
 
-Ví dụ EfficientNet:
-- Windows: python -m training.src.train --epochs 3 --batch-size 16 --backbone efficientnet_b0 --alias staging --primary-metric srocc
+| Split      | Số lượng |
+| ---------- | -------- |
+| Training   | 7,058    |
+| Validation | 1,000    |
+| Test       | 2,015    |
 
-Ví dụ MobileNet:
-- Windows: python -m training.src.train --epochs 3 --batch-size 16 --backbone mobilenet_v2 --alias staging --primary-metric srocc
 
-Bước 5: chạy FastAPI (API + UI)
-- Windows: uvicorn serving.api:app --reload --host 127.0.0.1 --port 8000
+## 3. Mô hình học máy
 
-Bước 6: mở UI và API docs
-- Trang chủ: http://127.0.0.1:8000/
-- UI dự đoán: http://127.0.0.1:8000/predict-ui
-- Swagger: http://127.0.0.1:8000/docs
-- Health: http://127.0.0.1:8000/health
+Bài toán được giải dưới dạng regression với output là 1 giá trị liên tục.
 
----
+### 3.1 Các backbone được sử dụng
 
-## 4. Chạy bằng Docker Compose
+Project so sánh 3 backbone CNN, đại diện cho các trade-off khác nhau:
 
-Bước 1: mở PowerShell tại Project_CK
-- Windows: cd Project_CK
+| Backbone        | Đặc điểm chính                             |
+| --------------- | ------------------------------------------ |
+| EfficientNet-B0 | Hiện đại, hiệu quả, chất lượng dự đoán cao |
+| ResNet18        | Ổn định, dễ huấn luyện, baseline tốt       |
+| MobileNetV2     | Nhẹ, nhanh, phù hợp deploy                 |
 
-Bước 2: build và chạy toàn bộ stack
-- Windows: docker compose up -d --build
+Tất cả backbone đều:
 
-Bước 3: kiểm tra container
-- Windows: docker compose ps
+* Load pretrained weights từ ImageNet
+* Thay head cuối bằng tầng hồi quy 1 output
+* Dùng Sigmoid để đảm bảo output nằm trong `[0, 1]`
 
-Bước 4: mở dịch vụ
-- MLflow: http://127.0.0.1:5000
-- API/UI: http://127.0.0.1:8000
-- Swagger: http://127.0.0.1:8000/docs
-- UI dự đoán: http://127.0.0.1:8000/predict-ui
 
-Bước 5: dừng hệ thống
-- Windows: docker compose down
+## 4. Huấn luyện & đánh giá
 
-Ghi chú: khi chạy bằng docker compose, FastAPI trong container sẽ kết nối MLflow qua hostname service (ví dụ http://mlflow:5000) theo cấu hình compose/env.
+### 4.1 Metric sử dụng
 
----
+Do IQA là bài toán đánh giá thứ hạng chất lượng ảnh, project sử dụng các metric chuẩn:
 
-## 5. Cách dùng UI dự đoán
+* SROCC (Spearman Rank Correlation) – *metric chính*
+* PLCC (Pearson Linear Correlation)
+* MAE, RMSE
+* MAE_100, RMSE_100 (quy đổi về thang 0–100)
 
-1) Mở http://127.0.0.1:8000/
-2) Bấm “Mở giao diện upload ảnh” (đi tới /predict-ui)
-3) Chọn ảnh, xem preview
-4) Bấm “Chấm điểm”
-5) Kết quả hiển thị trực quan (điểm 0–100 + thanh tiến độ + nhãn mức chất lượng)
+> Model được chọn dựa trên SROCC validation cao nhất. Nếu bằng nhau, so sánh RMSE_100.
 
-API dự đoán:
-- Endpoint: POST /predict
-- Form-data field: file
-- Response: {"quality": <0..100>}
 
----
+### 4.2 Cấu hình huấn luyện
 
-## 6. Training metrics
+Mỗi backbone được huấn luyện với 3 cấu hình hyperparameter:
 
-Các metrics chính:
-- srocc: Spearman rank correlation (quan trọng nhất với IQA vì đánh giá khả năng xếp hạng chất lượng ảnh)
-- plcc: Pearson correlation (tương quan tuyến tính)
-- mae/rmse: sai số trên thang 0–1
-- mae_100/rmse_100: sai số quy đổi thang 0–100 để dễ đọc
+| Learning rate | Epoch | Mục đích                                |
+| ------------- | ----- | --------------------------------------- |
+| 1e-3          | 3     | Học nhanh, kiểm tra khả năng hội tụ sớm |
+| 3e-4          | 5     | Cân bằng giữa tốc độ và độ ổn định      |
+| 1e-4          | 6     | Fine-tuning chậm, ổn định, giảm overfit |
 
-Quy tắc chọn model “tốt”:
-- Chọn model theo val_srocc cao nhất
-- Nếu bằng nhau, chọn rmse_100 thấp hơn
+→ Tổng cộng: 9 experiment (3 model × 3 cấu hình)
 
-Alias staging:
-- staging là alias trỏ đến 1 version trong MLflow Registry
-- FastAPI sẽ load model theo alias staging (tức staging chính là model đang dùng trên UI/serving)
 
-Nếu staging đổi mà serving vẫn dùng model cũ:
-- restart FastAPI hoặc triển khai reload cache (tuỳ cấu hình load_model)
+## 5. MLflow – Tracking & Model Registry
 
----
+Project sử dụng MLflow local cho toàn bộ vòng đời mô hình:
 
-## 7. Test (pytest)
+* Log hyperparameter, metric theo từng epoch
+* So sánh experiment trực quan
+* Log model kèm input_example & signature
+* Đăng ký model vào Model Registry
 
-Chạy test local:
-- Windows: cd Project_CK
-- Windows: pytest -q
+### 5.1 Alias `staging`
 
-Nếu thấy dạng “.... [100%]” nghĩa là tất cả test PASS.
+* Alias `staging` luôn trỏ tới model tốt nhất hiện tại
+* Khi train model mới:
 
----
+  * Nếu model tốt hơn (theo SROCC) → tự động cập nhật alias
+  * Nếu không → giữ nguyên model đang dùng
 
-## 8. CI (GitHub Actions) — chỉ cần 1 file CI-CD.yaml
+FastAPI serving luôn load model theo alias, không phụ thuộc version cụ thể.
 
-GitHub chỉ chạy workflow khi file nằm ở đúng đường dẫn tính từ root repo:
-- (repo root)/.github/workflows/CI-CD.yaml
 
-Trường hợp repo đặt project trong thư mục Project_CK/ thì workflow phải chạy pytest trong Project_CK và set PYTHONPATH để import được “serving”.
+## 6. Serving – FastAPI (API + Web UI)
 
-Ví dụ workflow CI:
-- Trigger khi push main hoặc pull_request main
-- Cài dependencies
-- pytest -q
-- Build docker images để kiểm tra Dockerfile build được
+### 6.1 API
 
-Sau khi push, xem kết quả:
-- GitHub repo -> Actions -> workflow “CI”
-- màu xanh = PASS, màu đỏ = FAIL
+Các endpoint chính:
+
+* `GET /health` – kiểm tra server
+* `POST /predict` – upload ảnh, trả về điểm chất lượng
+* `POST /reload-model` – reload model từ MLflow (clear cache)
+* `GET /docs` – Swagger UI
+
+### 6.2 Web UI
+
+Project cung cấp giao diện web đơn giản:
+
+* Upload ảnh
+* Preview ảnh
+* Hiển thị điểm số (0–100)
+* Thanh progress bar trực quan
+* Nhãn đánh giá: *Kém / Trung bình / Tốt / Rất tốt*
+
+UI giúp demo nhanh và trực quan cho người không chuyên ML.
+
+
+## 7. Kiểm thử (Testing)
+
+Project sử dụng pytest để kiểm thử:
+
+* Health endpoint
+* Root endpoint (`/`)
+* Predict endpoint
+
+Trong test predict:
+
+* Model được mock để tránh phụ thuộc MLflow
+* Đảm bảo test chạy nhanh, ổn định
+
+Chạy test:
+
+```bash
+pytest -q
+```
+
+
+## 8. Docker & Docker Compose
+
+Project hỗ trợ chạy toàn bộ stack bằng Docker:
+
+* MLflow server
+* FastAPI serving
+
+Chạy hệ thống:
+
+```bash
+docker compose up -d --build
+```
+
+Dừng hệ thống:
+
+```bash
+docker compose down
+```
+
+
+## 9. Cách chạy nhanh (không Docker)
+
+1. Tạo môi trường ảo và cài thư viện
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Chạy MLflow
+
+```bash
+infra/run_mlflow.bat
+```
+
+3. Huấn luyện model
+
+```bash
+python -m training.src.train --backbone efficientnet_b0 --epochs 5 --lr 3e-4 --alias staging
+```
+
+4. Chạy FastAPI
+
+```bash
+uvicorn serving.api:app --reload
+```
+
+5. Mở trình duyệt:
+
+* Trang chủ: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+* UI dự đoán: [http://127.0.0.1:8000/predict-ui](http://127.0.0.1:8000/predict-ui)
+
+
+## 10. Tổng kết
+
+Project này thể hiện:
+
+* Một pipeline MLOps end-to-end
+* So sánh nhiều mô hình & hyperparameter một cách có hệ thống
+* Tách biệt rõ training – model registry – serving
+* Có thể dùng làm:
+
+  * Project portfolio
+  * Demo phỏng vấn
+  * Nền tảng mở rộng production
