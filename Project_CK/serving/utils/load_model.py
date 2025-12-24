@@ -4,7 +4,7 @@ import torch
 import mlflow.pytorch
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
-MODEL_NAME = os.getenv("TEN_MODEL_IQA", "iqa_efficientnet_b0")
+MODEL_NAME = os.getenv("TEN_MODEL_IQA", "iqa_mobilenet_v2")
 MODEL_ALIAS = os.getenv("ALIAS_IQA", "staging")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
